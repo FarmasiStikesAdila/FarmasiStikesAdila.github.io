@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencatatan Obat - Self Medication</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .history-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .notification-permission {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pencatatan Obat Mandiri</h1>
+        
+        <!-- Bagian Informasi -->
+        <div class="info-section">
+            <h2>Pentingnya Pencatatan Obat</h2>
+            <div class="warning">
+                <h3>Bahaya Self-Medication</h3>
+                <p>Pengobatan mandiri tanpa pengawasan dokter dapat berbahaya karena:</p>
+                <ul>
+                    <li>Risiko salah diagnosis</li>
+                    <li>Efek samping obat</li>
+                    <li>Interaksi obat berbahaya</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Permintaan Izin Notifikasi -->
+        <div class="notification-permission">
+            <div>
+                <h3>Aktifkan Notifikasi</h3>
+                <p>Dapatkan pengingat minum obat saat browser ditutup</p>
+            </div>
+            <button id="enable-notifications">
+                Aktifkan Notifikasi
+            </button>
+        </div>
+        
+        <!-- Form Pencatatan Obat -->
+        <div class="medication-form">
+            <h2>Form Pencatatan Obat</h2>
+            <form id="medication-form">
+                <div class="form-group">
+                    <label for="med-name">Nama Obat</label>
+                    <input type="text" id="med-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="med-dosage">Dosis</label>
+                    <input type="text" id="med-dosage" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="med-time">Jam Minum</label>
+                    <input type="time" id="med-time" required>
+                </div>
+                
+                <button type="submit">Simpan Catatan</button>
+            </form>
+        </div>
+        
+        <!-- Riwayat Obat -->
+        <div class="history-section">
+            <h2>Riwayat Obat</h2>
+            <div id="medication-history"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data obat
+        let medications = JSON.parse(localStorage.getItem('medications')) || [];
+        
+        // Inisialisasi Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered:', reg))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+        
+        // Permintaan Izin Notifikasi
+        document.getElementById('enable-notifications').addEventListener('click', () => {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    alert('Notifikasi diaktifkan! Anda akan menerima pengingat.');
+                    testNotification();
+                } else {
+                    alert('Anda perlu mengizinkan notifikasi untuk fitur ini.');
+                }
+            });
+        });
+        
+        // Fungsi tes notifikasi
+        function testNotification() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification('Tes Notifikasi', {
+                        body: 'Ini bukti notifikasi bekerja saat browser ditutup',
+                        vibrate: [200,100,200]
+                    });
+                });
+            } else {
+                new Notification('Tes Notifikasi', {
+                    body: 'Notifikasi standar (bekerja saat browser terbuka)'
+                });
+            }
+        }
+        
+        // Form submit
+        document.getElementById('medication-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const medName = document.getElementById('med-name').value;
+            const dosage = document.getElementById('med-dosage').value;
+            const medTime = document.getElementById('med-time').value;
+            
+            const medication = {
+                id: Date.now(),
+                name: medName,
+                dosage: dosage,
+                time: medTime,
+                timestamp: new Date().toISOString()
+            };
+            
+            medications.push(medication);
+            localStorage.setItem('medications', JSON.stringify(medications));
+            
+            // Jadwalkan notifikasi
+            scheduleNotification(medication);
+            
+            // Reset form
+            this.reset();
+            renderMedicationHistory();
+            
+            alert('Catatan obat berhasil disimpan!');
+        });
+        
+        // Fungsi penjadwalan notifikasi
+        function scheduleNotification(medication) {
+            const now = new Date();
+            const [hours, minutes] = medication.time.split(':');
+            const notificationTime = new Date();
+            
+            notificationTime.setHours(hours, minutes, 0, 0);
+            
+            // Jika waktu sudah lewat hari ini, atur untuk besok
+            if (notificationTime < now) {
+                notificationTime.setDate(notificationTime.getDate() + 1);
+            }
+            
+            const timeUntilNotification = notificationTime.getTime() - now.getTime();
+            
+            setTimeout(() => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification(`Waktunya Minum Obat`, {
+                            body: `${medication.name} (${medication.dosage})`,
+                            vibrate: [200,100,200],
+                            data: { url: window.location.href }
+                        });
+                    });
+                }
+            }, timeUntilNotification);
+        }
+        
+        // Render riwayat obat
+        function renderMedicationHistory() {
+            const historyContainer = document.getElementById('medication-history');
+            historyContainer.innerHTML = '';
+            
+            medications.forEach(med => {
+                const medItem = document.createElement('div');
+                medItem.className = 'history-item';
+                medItem.innerHTML = `
+                    <strong>${med.name}</strong>
+                    <p>Dosis: ${med.dosage} - Jam: ${med.time}</p>
+                    <button onclick="deleteMedication(${med.id})">Hapus</button>
+                `;
+                historyContainer.appendChild(medItem);
+            });
+        }
+        
+        // Fungsi hapus obat
+        window.deleteMedication = function(id) {
+            medications = medications.filter(med => med.id !== id);
+            localStorage.setItem('medications', JSON.stringify(medications));
+            renderMedicationHistory();
+        }
+        
+        // Muat riwayat saat halaman dimuat
+        renderMedicationHistory();
+    </script>
+</body>
+</html>
