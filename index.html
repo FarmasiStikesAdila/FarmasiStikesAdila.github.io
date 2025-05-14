@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTrack - Self-Medication Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4b8df8;
+            --secondary: #f5f7fa;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --warning: #ffa502;
+            --dark: #2f3542;
+            --light: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: var(--secondary);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="rgba(255,255,255,0.1)"><path d="M30,10 Q50,5 70,10 T90,30 Q95,50 90,70 T70,90 Q50,95 30,90 T10,70 Q5,50 10,30 T30,10"></path></svg>');
+            background-size: 80px;
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .auth-buttons button {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pill-animation {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: floatPill 15s linear infinite;
+        }
+        
+        @keyframes floatPill {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-500px) translateX(200px);
+                opacity: 0;
+            }
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalFadeIn 0.3s;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .submit-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #3a7be0;
+        }
+        
+        /* Main content */
+        .main-content {
+            padding: 40px 0;
+        }
+        
+        .info-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-section h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-section h2 i {
+            margin-right: 10px;
+        }
+        
+        .warning-box {
+            background-color: #fff8e6;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .benefit-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        /* Medication form */
+        .medication-form {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .medication-form h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .medication-form h2 i {
+            margin-right: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        
+        .form-col {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+        
+        .time-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .time-option {
+            background-color: var(--secondary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .time-option.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .meal-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .meal-option {
+            background-color: var(--secondary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .meal-option.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .frequency-options {
+            margin-top: 10px;
+        }
+        
+        .frequency-option {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        /* History section */
+        .history-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .history-section h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-section h2 i {
+            margin-right: 10px;
+        }
+        
+        .history-list {
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            background-color: var(--secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .history-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .medicine-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+        
+        .medicine-dose {
+            background-color: var(--primary);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .medicine-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-item i {
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: var(--danger);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+        }
+        
+        /* Notification permission */
+        .notification-permission {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .notification-permission i {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .notification-text {
+            flex: 1;
+        }
+        
+        .enable-notification {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .auth-buttons {
+                margin-top: 15px;
+            }
+            
+            .form-col {
+                flex: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-pills"></i>
+                <h1>MedTrack</h1>
+            </div>
+            <div class="auth-buttons">
+                <button id="registerBtn">Daftar</button>
+                <button id="loginBtn">Masuk</button>
+            </div>
+        </div>
+        
+        <!-- Floating pill animations -->
+        <div class="pill-animation" style="left: 10%; animation-delay: 0s;"><i class="fas fa-pills"></i></div>
+        <div class="pill-animation" style="left: 30%; animation-delay: 3s;"><i class="fas fa-capsules"></i></div>
+        <div class="pill-animation" style="left: 50%; animation-delay: 6s;"><i class="fas fa-prescription-bottle-alt"></i></div>
+        <div class="pill-animation" style="left: 70%; animation-delay: 9s;"><i class="fas fa-syringe"></i></div>
+        <div class="pill-animation" style="left: 90%; animation-delay: 12s;"><i class="fas fa-tablets"></i></div>
+    </header>
+    
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2><i class="fas fa-user-plus"></i> Daftar Akun</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Nama Lengkap</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Daftar</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2><i class="fas fa-sign-in-alt"></i> Masuk ke Akun</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Masuk</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="container main-content">
+        <!-- Information Section -->
+        <section class="info-section">
+            <h2><i class="fas fa-info-circle"></i> Tentang Self-Medication</h2>
+            <div class="warning-box">
+                <h3><i class="fas fa-exclamation-triangle"></i> Bahaya Self-Medication</h3>
+                <p>Self-medication atau pengobatan sendiri tanpa pengawasan tenaga kesehatan dapat berisiko:</p>
+                <ul>
+                    <li>Diagnosis yang tidak tepat</li>
+                    <li>Pemilihan obat yang salah</li>
+                    <li>Dosis yang tidak tepat</li>
+                    <li>Interaksi obat yang berbahaya</li>
+                    <li>Efek samping yang tidak terduga</li>
+                    <li>Resistensi antibiotik jika digunakan tidak tepat</li>
+                </ul>
+            </div>
+            <div class="benefit-box">
+                <h3><i class="fas fa-check-circle"></i> Manfaat Pencatatan Obat</h3>
+                <p>Dengan mencatat penggunaan obat, Anda dapat:</p>
+                <ul>
+                    <li>Mengurangi risiko overdosis</li>
+                    <li>Memastikan konsumsi obat tepat waktu</li>
+                    <li>Menghindari interaksi obat berbahaya</li>
+                    <li>Memantau efek samping yang mungkin terjadi</li>
+                    <li>Memberikan informasi akurat saat berkonsultasi dengan dokter</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Medication Form -->
+        <section class="medication-form">
+            <h2><i class="fas fa-edit"></i> Catatan Obat</h2>
+            <form id="medicineForm">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="medicineName">Nama Obat</label>
+                            <input type="text" id="medicineName" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="medicineDose">Dosis</label>
+                            <input type="text" id="medicineDose" placeholder="Contoh: 500mg" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Waktu Minum</label>
+                            <div class="time-options">
+                                <div class="time-option active" data-time="pagi">Pagi</div>
+                                <div class="time-option" data-time="siang">Siang</div>
+                                <div class="time-option" data-time="malam">Malam</div>
+                            </div>
+                            <input type="hidden" id="medicineTime" value="pagi">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label>Sebelum/Sesudah Makan</label>
+                            <div class="meal-options">
+                                <div class="meal-option active" data-meal="sebelum">Sebelum Makan</div>
+                                <div class="meal-option" data-meal="sesudah">Sesudah Makan</div>
+                            </div>
+                            <input type="hidden" id="medicineMeal" value="sebelum">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="medicineTimeInput">Jam Minum</label>
+                            <input type="time" id="medicineTimeInput" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="medicineFrequency">Frekuensi</label>
+                            <div class="frequency-options">
+                                <label class="frequency-option">
+                                    <input type="radio" name="frequency" value="3x1" checked> 3x sehari (setiap 8 jam)
+                                </label>
+                                <label class="frequency-option">
+                                    <input type="radio" name="frequency" value="2x1"> 2x sehari (setiap 12 jam)
+                                </label>
+                                <label class="frequency-option">
+                                    <input type="radio" name="frequency" value="1x1"> 1x sehari
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Simpan Catatan Obat</button>
+            </form>
+            
+            <div class="notification-permission" id="notificationPrompt" style="display: none;">
+                <i class="fas fa-bell"></i>
+                <div class="notification-text">
+                    <strong>Aktifkan Notifikasi</strong>
+                    <p>Izinkan MedTrack untuk mengirimkan pengingat minum obat bahkan saat browser ditutup.</p>
+                </div>
+                <button class="enable-notification" id="enableNotification">Aktifkan</button>
+            </div>
+        </section>
+        
+        <!-- History Section -->
+        <section class="history-section">
+            <h2><i class="fas fa-history"></i> Riwayat Obat</h2>
+            <div class="history-list" id="medicineHistory">
+                <!-- History items will be added here dynamically -->
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Modal functionality
+        const registerBtn = document.getElementById('registerBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerModal = document.getElementById('registerModal');
+        const loginModal = document.getElementById('loginModal');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        
+        registerBtn.addEventListener('click', () => {
+            registerModal.style.display = 'block';
+        });
+        
+        loginBtn.addEventListener('click', () => {
+            loginModal.style.display = 'block';
+        });
+        
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                registerModal.style.display = 'none';
+                loginModal.style.display = 'none';
+            });
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.style.display = 'none';
+            }
+            if (e.target === loginModal) {
+                loginModal.style.display = 'none';
+            }
+        });
+        
+        // Time option selection
+        const timeOptions = document.querySelectorAll('.time-option');
+        const medicineTime = document.getElementById('medicineTime');
+        
+        timeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                timeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                medicineTime.value = option.dataset.time;
+            });
+        });
+        
+        // Meal option selection
+        const mealOptions = document.querySelectorAll('.meal-option');
+        const medicineMeal = document.getElementById('medicineMeal');
+        
+        mealOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                mealOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                medicineMeal.value = option.dataset.meal;
+            });
+        });
+        
+        // Medicine form submission
+        const medicineForm = document.getElementById('medicineForm');
+        const medicineHistory = document.getElementById('medicineHistory');
+        
+        // Load saved medicines from localStorage
+        let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+        
+        function renderHistory() {
+            medicineHistory.innerHTML = '';
+            
+            if (medicines.length === 0) {
+                medicineHistory.innerHTML = '<p>Belum ada catatan obat.</p>';
+                return;
+            }
+            
+            medicines.forEach((medicine, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const nextTime = calculateNextTime(medicine.time, medicine.frequency);
+                
+                historyItem.innerHTML = `
+                    <div class="history-item-header">
+                        <span class="medicine-name">${medicine.name}</span>
+                        <span class="medicine-dose">${medicine.dose}</span>
+                    </div>
+                    <div class="medicine-details">
+                        <div class="detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span>${medicine.time} (${medicine.meal} makan)</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-bell"></i>
+                            <span>${medicine.timeInput}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-redo"></i>
+                            <span>${medicine.frequency === '3x1' ? 'Setiap 8 jam' : medicine.frequency === '2x1' ? 'Setiap 12 jam' : 'Setiap 24 jam'}</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Pengingat berikutnya: ${nextTime}</span>
+                    </div>
+                    <button class="delete-btn" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                medicineHistory.appendChild(historyItem);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.currentTarget.dataset.index;
+                    medicines.splice(index, 1);
+                    localStorage.setItem('medicines', JSON.stringify(medicines));
+                    renderHistory();
+                });
+            });
+        }
+        
+        function calculateNextTime(currentTime, frequency) {
+            const now = new Date();
+            let nextTime = new Date();
+            
+            // Set the next time based on frequency
+            if (frequency === '3x1') {
+                nextTime.setHours(now.getHours() + 8);
+            } else if (frequency === '2x1') {
+                nextTime.setHours(now.getHours() + 12);
+            } else {
+                nextTime.setDate(now.getDate() + 1);
+            }
+            
+            return nextTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        medicineForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const medicine = {
+                name: document.getElementById('medicineName').value,
+                dose: document.getElementById('medicineDose').value,
+                time: document.getElementById('medicineTime').value,
+                meal: document.getElementById('medicineMeal').value,
+                timeInput: document.getElementById('medicineTimeInput').value,
+                frequency: document.querySelector('input[name="frequency"]:checked').value,
+                date: new Date().toLocaleString()
+            };
+            
+            medicines.unshift(medicine);
+            localStorage.setItem('medicines', JSON.stringify(medicines));
+            
+            // Show notification prompt if not already shown
+            if (Notification.permission !== 'granted' && !localStorage.getItem('notificationPromptShown')) {
+                document.getElementById('notificationPrompt').style.display = 'flex';
+                localStorage.setItem('notificationPromptShown', 'true');
+            }
+            
+            // Reset form
+            medicineForm.reset();
+            document.getElementById('medicineTime').value = 'pagi';
+            document.getElementById('medicineMeal').value = 'sebelum';
+            document.querySelector('input[name="frequency"][value="3x1"]').checked = true;
+            
+            // Update history
+            renderHistory();
+            
+            // Schedule notifications
+            scheduleNotifications(medicine);
+        });
+        
+        // Notification permission
+        const enableNotificationBtn = document.getElementById('enableNotification');
+        
+        enableNotificationBtn.addEventListener('click', () => {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('Notifikasi diaktifkan! Anda akan menerima pengingat minum obat.');
+                        document.getElementById('notificationPrompt').style.display = 'none';
+                        
+                        // Schedule notifications for all medicines
+                        medicines.forEach(medicine => {
+                            scheduleNotifications(medicine);
+                        });
+                    }
+                });
+            } else {
+                alert('Browser Anda tidak mendukung notifikasi.');
+            }
+        });
+        
+        function scheduleNotifications(medicine) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                const now = new Date();
+                const [hours, minutes] = medicine.timeInput.split(':');
+                
+                // Set initial notification time
+                const notificationTime = new Date();
+                notificationTime.setHours(parseInt(hours));
+                notificationTime.setMinutes(parseInt(minutes));
+                
+                // If the time has already passed today, schedule for tomorrow
+                if (notificationTime < now) {
+                    notificationTime.setDate(notificationTime.getDate() + 1);
+                }
+                
+                const timeUntilNotification = notificationTime - now;
+                
+                setTimeout(() => {
+                    const notification = new Notification('Waktunya minum obat!', {
+                        body: `Waktunya minum ${medicine.name} (${medicine.dose}) ${medicine.time} ${medicine.meal} makan.`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3148/3148828.png',
+                        vibrate: [200, 100, 200]
+                    });
+                    
+                    // Play sound
+                    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+                    audio.play();
+                    
+                    // Schedule next notification based on frequency
+                    let nextInterval = 24 * 60 * 60 * 1000; // Default 24 hours
+                    
+                    if (medicine.frequency === '3x1') {
+                        nextInterval = 8 * 60 * 60 * 1000; // 8 hours
+                    } else if (medicine.frequency === '2x1') {
+                        nextInterval = 12 * 60 * 60 * 1000; // 12 hours
+                    }
+                    
+                    setInterval(() => {
+                        new Notification('Waktunya minum obat!', {
+                            body: `Waktunya minum ${medicine.name} (${medicine.dose}) ${medicine.time} ${medicine.meal} makan.`,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3148/3148828.png',
+                            vibrate: [200, 100, 200]
+                        });
+                        audio.play();
+                    }, nextInterval);
+                    
+                }, timeUntilNotification);
+            }
+        }
+        
+        // Initial render
+        renderHistory();
+        
+        // Create floating pill animations dynamically
+        function createPillAnimations() {
+            const header = document.querySelector('header');
+            const pills = ['fa-pills', 'fa-capsules', 'fa-tablets', 'fa-prescription-bottle-alt', 'fa-syringe'];
+            
+            for (let i = 0; i < 10; i++) {
+                const pill = document.createElement('div');
+                pill.className = 'pill-animation';
+                pill.style.left = `${Math.random() * 100}%`;
+                pill.style.animationDelay = `${Math.random() * 15}s`;
+                pill.innerHTML = `<i class="fas ${pills[Math.floor(Math.random() * pills.length)]}"></i>`;
+                header.appendChild(pill);
+            }
+        }
+        
+        createPillAnimations();
+    </script>
+</body>
+</html>
+<script>
+    // Cek status login
+    function checkLoginStatus() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const formSection = document.querySelector('.medication-form');
+        if (!user) {
+            formSection.innerHTML = `
+                <div style="text-align: center; padding: 30px;">
+                    <p>Silakan <strong>daftar</strong> atau <strong>login</strong> untuk mulai mencatat penggunaan obat.</p>
+                    <button id="triggerLogin" class="submit-btn" style="margin-top: 20px;">Masuk</button>
+                </div>`;
+            document.getElementById('triggerLogin').addEventListener('click', () => {
+                loginModal.style.display = 'block';
+            });
+            return false;
+        }
+        return true;
+    }
+
+    // Simpan data pendaftaran
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const exists = users.find(user => user.email === email);
+        if (exists) {
+            alert('Email sudah terdaftar!');
+            return;
+        }
+
+        users.push({ name, email, password });
+        localStorage.setItem('users', JSON.stringify(users));
+        alert('Pendaftaran berhasil. Silakan login.');
+        registerModal.style.display = 'none';
+    });
+
+    // Proses login
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(user => user.email === email && user.password === password);
+
+        if (user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            alert('Login berhasil!');
+            location.reload();
+        } else {
+            alert('Email atau password salah.');
+        }
+    });
+
+    // Tambah tombol logout di pojok kanan
+    const authContainer = document.querySelector('.auth-buttons');
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser) {
+        authContainer.innerHTML = `
+            <span style="color: white; margin-right: 10px;">Halo, ${currentUser.name}</span>
+            <button id="logoutBtn">Logout</button>
+        `;
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        });
+    }
+
+    // Tambahkan validasi login sebelum mencatat obat
+    medicineForm.addEventListener('submit', (e) => {
+        if (!checkLoginStatus()) {
+            e.preventDefault();
+            alert('Silakan login terlebih dahulu untuk mencatat obat.');
+            return;
+        }
+    });
+
+    // Jalankan saat halaman dimuat
+    checkLoginStatus();
+</script>
