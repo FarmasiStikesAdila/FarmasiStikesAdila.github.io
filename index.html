@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SelfCare - Pencatatan Obat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #2196F3;
+            --danger: #F44336;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 22px;
+            margin: 20px 0 15px;
+            color: var(--primary);
+        }
+        
+        .card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 17px;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .time-options, .meal-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .time-option, .meal-option {
+            flex: 1;
+        }
+        
+        .time-option input, .meal-option input {
+            display: none;
+        }
+        
+        .time-option label, .meal-option label {
+            display: block;
+            padding: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .time-option input:checked + label,
+        .meal-option input:checked + label {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .history-item {
+            padding: 18px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item .med-details span {
+            margin-right: 15px;
+        }
+        
+        .delete-btn {
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .notification-permission {
+            background-color: #e3f2fd;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 25px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .time-options, .meal-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-pills"></i> SelfCare</h1>
+            <p>Pencatatan Obat Mandiri yang Aman</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Sistem Login/Daftar -->
+        <div id="auth-container" class="card">
+            <div style="display: flex; margin-bottom: 20px;">
+                <button id="login-tab" style="flex: 1; background-color: var(--primary); color: white; padding: 12px;">Masuk</button>
+                <button id="register-tab" style="flex: 1; background-color: #e0e0e0; padding: 12px;">Daftar</button>
+            </div>
+            
+            <!-- Form Login -->
+            <div id="login-form">
+                <div class="form-group">
+                    <label for="login-email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button id="login-btn" class="btn">Masuk</button>
+            </div>
+            
+            <!-- Form Daftar -->
+            <div id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label for="register-name"><i class="fas fa-user"></i> Nama Lengkap</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm"><i class="fas fa-lock"></i> Konfirmasi Password</label>
+                    <input type="password" id="register-confirm" required>
+                </div>
+                <button id="register-btn" class="btn">Daftar</button>
+            </div>
+        </div>
+        
+        <!-- Konten Utama (muncul setelah login) -->
+        <div id="main-content" style="display: none;">
+            <!-- Edukasi -->
+            <div class="card">
+                <h2><i class="fas fa-exclamation-triangle"></i> Bahaya Self-Medication</h2>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Risiko salah diagnosis</li>
+                    <li>Efek samping obat</li>
+                    <li>Interaksi obat berbahaya</li>
+                </ul>
+                
+                <h2><i class="fas fa-check-circle"></i> Manfaat Pencatatan Obat</h2>
+                <ul style="margin-left: 20px;">
+                    <li>Memantau jadwal minum obat</li>
+                    <li>Mencegah overdosis</li>
+                    <li>Informasi untuk tenaga kesehatan</li>
+                </ul>
+            </div>
+            
+            <!-- Permintaan Izin Notifikasi -->
+            <div class="notification-permission">
+                <div>
+                    <h3><i class="fas fa-bell"></i> Aktifkan Notifikasi</h3>
+                    <p>Dapatkan pengingat minum obat saat aplikasi ditutup</p>
+                </div>
+                <button id="enable-notifications" class="btn" style="width: auto; padding: 10px 15px;">
+                    <i class="fas fa-bell"></i> Aktifkan
+                </button>
+            </div>
+            
+            <!-- Form Obat -->
+            <div class="card">
+                <h2><i class="fas fa-pills"></i> Form Pencatatan Obat</h2>
+                <form id="medication-form">
+                    <div class="form-group">
+                        <label for="med-name"><i class="fas fa-medkit"></i> Nama Obat</label>
+                        <input type="text" id="med-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="med-dosage"><i class="fas fa-prescription-bottle-alt"></i> Dosis</label>
+                        <input type="text" id="med-dosage" placeholder="Contoh: 1 tablet pagi dan sore" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Waktu Minum</label>
+                        <div class="time-options">
+                            <div class="time-option">
+                                <input type="radio" id="time-morning" name="time" value="Pagi" checked>
+                                <label for="time-morning">Pagi</label>
+                            </div>
+                            <div class="time-option">
+                                <input type="radio" id="time-afternoon" name="time" value="Siang">
+                                <label for="time-afternoon">Siang</label>
+                            </div>
+                            <div class="time-option">
+                                <input type="radio" id="time-evening" name="time" value="Malam">
+                                <label for="time-evening">Malam</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-utensils"></i> Waktu Makan</label>
+                        <div class="meal-options">
+                            <div class="meal-option">
+                                <input type="radio" id="meal-before" name="meal" value="Sebelum Makan" checked>
+                                <label for="meal-before">Sebelum Makan</label>
+                            </div>
+                            <div class="meal-option">
+                                <input type="radio" id="meal-after" name="meal" value="Sesudah Makan">
+                                <label for="meal-after">Sesudah Makan</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="med-time"><i class="fas fa-hourglass-start"></i> Jam Minum</label>
+                        <input type="time" id="med-time" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="frequency"><i class="fas fa-calendar-alt"></i> Frekuensi Minum Obat</label>
+                        <select id="frequency" required>
+                            <option value="">Pilih frekuensi</option>
+                            <option value="3x1">3x Sehari (setiap 8 jam)</option>
+                            <option value="2x1">2x Sehari (setiap 12 jam)</option>
+                            <option value="custom">Jadwal Khusus</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="next-time-group" style="display: none;">
+                        <label for="next-time"><i class="fas fa-hourglass-end"></i> Jam Minum Berikutnya (Anjuran Apoteker)</label>
+                        <input type="time" id="next-time">
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <i class="fas fa-save"></i> Simpan Catatan
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Riwayat Obat -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Riwayat Obat</h2>
+                <div id="medication-history">
+                    <!-- Riwayat akan muncul di sini -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Pengguna dan Obat
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = null;
+        let medications = [];
+        
+        // Inisialisasi Form
+        document.getElementById('frequency').addEventListener('change', function() {
+            document.getElementById('next-time-group').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Fungsi untuk menghitung jam minum berikutnya
+        function calculateNextTime(frequency, currentTime) {
+            const [hours, mins] = currentTime.split(':').map(Number);
+            const nextTime = new Date();
+            nextTime.setHours(hours, mins, 0, 0);
+            
+            if (frequency === '3x1') {
+                nextTime.setHours(nextTime.getHours() + 8);
+            } else if (frequency === '2x1') {
+                nextTime.setHours(nextTime.getHours() + 12);
+            }
+            
+            return `${String(nextTime.getHours()).padStart(2, '0')}:${String(nextTime.getMinutes()).padStart(2, '0')}`;
+        }
+        
+        // [Kode JavaScript lainnya tetap sama...]
+        
+        // Contoh data dummy untuk testing
+        if (users.length === 0) {
+            users = [
+                { name: "User Demo", email: "demo@example.com", password: "demo123" }
+            ];
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+    </script>
+</body>
+</html>
