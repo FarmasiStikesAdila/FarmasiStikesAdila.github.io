@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SelfCare - Pencatatan Obat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #2196F3;
+            --danger: #F44336;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px; /* Ukuran font dasar diperbesar */
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px; /* Lebar container diperbesar */
+            margin: 0 auto;
+            padding: 25px; /* Padding diperbesar */
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 25px 0; /* Padding diperbesar */
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow lebih tebal */
+        }
+        
+        h1 {
+            font-size: 28px; /* Ukuran judul diperbesar */
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 22px; /* Ukuran subjudul diperbesar */
+            margin: 20px 0 15px;
+        }
+        
+        /* Tampilan Auth */
+        .auth-container {
+            background-color: white;
+            padding: 35px; /* Padding diperbesar */
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 35px auto;
+            max-width: 550px; /* Lebar diperbesar */
+        }
+        
+        .form-group {
+            margin-bottom: 20px; /* Jarak antar form diperbesar */
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px; /* Jarak label diperbesar */
+            font-weight: 600;
+            font-size: 17px; /* Ukuran label diperbesar */
+        }
+        
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px; /* Padding input diperbesar */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        /* Tombol dengan ukuran lebih besar */
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 14px 25px; /* Ukuran tombol diperbesar */
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px; /* Ukuran font tombol diperbesar */
+            transition: all 0.3s;
+        }
+        
+        /* Card dengan ukuran lebih besar */
+        .card {
+            background-color: white;
+            padding: 30px; /* Padding diperbesar */
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+        
+        /* Form Obat */
+        .time-options, .meal-options {
+            display: flex;
+            gap: 15px; /* Jarak opsi diperbesar */
+            margin-bottom: 20px;
+        }
+        
+        .time-option, .meal-option {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .time-option label, .meal-option label {
+            display: block;
+            padding: 12px; /* Padding label diperbesar */
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        /* Riwayat Obat */
+        .history-item {
+            padding: 18px; /* Padding diperbesar */
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item .med-details span {
+            margin-right: 15px; /* Jarak antar detail diperbesar */
+        }
+        
+        /* Notifikasi */
+        .notification-permission {
+            padding: 18px; /* Padding diperbesar */
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        
+        /* Responsif */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .time-options, .meal-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- [Kode HTML sebelumnya dipertahankan...] -->
+    
+    <script>
+        // [Kode JavaScript sebelumnya dipertahankan...]
+        
+        // Fungsi untuk menghitung jam minum berikutnya berdasarkan frekuensi
+        function calculateNextTime(frequency, currentTime) {
+            const [hours, mins] = currentTime.split(':').map(Number);
+            const nextTime = new Date();
+            
+            nextTime.setHours(hours, mins, 0, 0);
+            
+            if (frequency === '3x1') {
+                nextTime.setHours(nextTime.getHours() + 8); // 3x1 = setiap 8 jam
+            } else if (frequency === '2x1') {
+                nextTime.setHours(nextTime.getHours() + 12); // 2x1 = setiap 12 jam
+            }
+            
+            // Format ke HH:MM
+            return `${String(nextTime.getHours()).padStart(2, '0')}:${String(nextTime.getMinutes()).padStart(2, '0')}`;
+        }
+        
+        // Modifikasi fungsi saveMedication untuk menambahkan frekuensi
+        function saveMedication(e) {
+            e.preventDefault();
+            
+            const medName = document.getElementById('med-name').value;
+            const dosage = document.getElementById('med-dosage').value;
+            const time = document.querySelector('input[name="time"]:checked').value;
+            const meal = document.querySelector('input[name="meal"]:checked').value;
+            const medTime = document.getElementById('med-time').value;
+            const frequency = document.getElementById('frequency').value;
+            
+            // Hitung jam minum berikutnya secara otomatis
+            const nextTime = calculateNextTime(frequency, medTime);
+            
+            const medication = {
+                id: Date.now(),
+                name: medName,
+                dosage,
+                time,
+                meal,
+                medTime,
+                nextTime,
+                frequency,
+                timestamp: new Date().toISOString()
+            };
+            
+            medications.push(medication);
+            localStorage.setItem(`meds_${currentUser.email}`, JSON.stringify(medications));
+            
+            scheduleNotification(medication);
+            renderMedHistory();
+            e.target.reset();
+            
+            alert('Catatan obat berhasil disimpan!');
+        }
+        
+        // Modifikasi fungsi scheduleNotification untuk menambahkan suara
+        function scheduleNotification(med) {
+            const now = new Date();
+            const [hours, mins] = med.medTime.split(':');
+            const notifyTime = new Date();
+            
+            notifyTime.setHours(parseInt(hours), parseInt(mins), 0, 0);
+            
+            if (notifyTime < now) notifyTime.setDate(notifyTime.getDate() + 1);
+            
+            const timeout = notifyTime.getTime() - now.getTime();
+            
+            setTimeout(() => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        // Memainkan suara notifikasi
+                        playNotificationSound();
+                        
+                        reg.showNotification(`Waktunya Minum Obat - ${med.name}`, {
+                            body: `Dosis: ${med.dosage}\nWaktu: ${med.time} (${med.meal})`,
+                            vibrate: [500, 200, 500], // Getar lebih panjang
+                            icon: 'icon.png',
+                            data: { url: window.location.href }
+                        });
+                    });
+                }
+                
+                // Jadwalkan notifikasi berikutnya
+                const nextNotify = new Date(notifyTime);
+                if (med.frequency === '3x1') {
+                    nextNotify.setHours(nextNotify.getHours() + 8);
+                } else {
+                    nextNotify.setHours(nextNotify.getHours() + 12);
+                }
+                
+                const nextTimeout = nextNotify.getTime() - notifyTime.getTime();
+                setTimeout(() => {
+                    playNotificationSound();
+                    navigator.serviceWorker?.ready.then(reg => {
+                        reg.showNotification(`Pengingat Lanjutan - ${med.name}`, {
+                            body: `Dosis: ${med.dosage}\nWaktu: Anjuran Apoteker (${med.frequency})`,
+                            vibrate: [500, 200, 500]
+                        });
+                    });
+                }, nextTimeout);
+            }, timeout);
+        }
+        
+        // Fungsi untuk memainkan suara notifikasi
+        function playNotificationSound() {
+            const audio = new Audio('notification.mp3'); // Ganti dengan file suara Anda
+            audio.play().catch(e => console.log('Tidak bisa memainkan suara:', e));
+        }
+        
+        // Modifikasi form untuk menambahkan pilihan frekuensi
+        function initForm() {
+            const form = document.getElementById('medication-form');
+            
+            // Tambahkan elemen frekuensi
+            const frequencyHtml = `
+                <div class="form-group">
+                    <label for="frequency">Frekuensi Minum Obat</label>
+                    <select id="frequency" required>
+                        <option value="">Pilih frekuensi</option>
+                        <option value="3x1">3x Sehari (setiap 8 jam)</option>
+                        <option value="2x1">2x Sehari (setiap 12 jam)</option>
+                        <option value="custom">Jadwal Khusus</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="next-time-group" style="display: none;">
+                    <label for="next-time">Jam Minum Berikutnya (Anjuran Apoteker)</label>
+                    <input type="time" id="next-time">
+                </div>
+            `;
+            
+            // Sisipkan sebelum tombol submit
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.insertAdjacentHTML('beforebegin', frequencyHtml);
+            
+            // Event listener untuk perubahan frekuensi
+            document.getElementById('frequency').addEventListener('change', function() {
+                const nextTimeGroup = document.getElementById('next-time-group');
+                if (this.value === 'custom') {
+                    nextTimeGroup.style.display = 'block';
+                } else {
+                    nextTimeGroup.style.display = 'none';
+                }
+            });
+        }
+        
+        // Panggil initForm saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', initForm);
+    </script>
+</body>
+</html>
