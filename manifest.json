@@ -1,0 +1,14 @@
+
+{
+  "name": "Pengingat Minum Obat",
+  "short_name": "Minum Obat",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Aplikasi pengingat minum obat.",
+  "icons": [{
+    "src": "icon.png",
+    "type": "image/png",
+    "sizes": "192x192"
+  }]
+}
