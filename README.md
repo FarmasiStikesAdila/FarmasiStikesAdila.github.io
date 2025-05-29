@@ -1,1 +1,1 @@
-# FarmasiStikesAdila.github.io
+# FarmasiStikesAdila.Self-Medication.github.io
