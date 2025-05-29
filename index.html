@@ -1069,3 +1069,15 @@ if ('serviceWorker' in navigator) {
     // Jalankan saat halaman dimuat
     checkLoginStatus();
 </script>
+<script>
+  Notification.requestPermission().then(function(permission) {
+    if (permission === "granted") {
+      setTimeout(function() {
+        new Notification("Tes Notifikasi!", {
+          body: "Ini adalah contoh notifikasi yang muncul setelah 10 detik.",
+          icon: "icon.png"
+        });
+      }, 10000); // 10 detik
+    }
+  });
+</script>
